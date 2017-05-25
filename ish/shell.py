@@ -32,7 +32,7 @@ class Shell(Cmd):
         stdout = sys.stdout
 
         for m in modules:
-            mod = getattr(importlib.import_module('websh.modules.%s' % m),
+            mod = getattr(importlib.import_module('ish.modules.%s' % m),
                             'Module')(self)
 
             for fn in dir(mod):

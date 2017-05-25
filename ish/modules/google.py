@@ -6,7 +6,7 @@ from colored import fg, bg, attr
 
 from bs4 import BeautifulSoup
 
-from websh.base import Command
+from ish.base import Command
 
 class Module(Command):
     def do_google(self, arg):
