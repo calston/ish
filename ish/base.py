@@ -14,3 +14,6 @@ class Web(object):
 class Command(object):
     def __init__(self, shell):
         self.shell = shell
+
+    def println(self, s):
+        self.shell.stdout.write(str(s)+'\n')

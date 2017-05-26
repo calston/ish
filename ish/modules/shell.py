@@ -16,6 +16,17 @@ class Module(Command):
 
         Command.__init__(self, *a)
 
+    def do_soup(self, arg):
+        """Returns the body of the last request"""
+        if not self.soup:
+            self.println('No soup for you!')
+        else:
+            self.println(str(self.soup))
+
+    def do_json(self, arg):
+        """Make json requests"""
+        self.println(self.stdin)
+
     def do_cd(self, arg):
         "Traverse the intertubes"
 
@@ -50,7 +61,7 @@ class Module(Command):
                 d = arg
             else:
                 d = os.path.join(cwd, arg)
-        
+
         self.soup = None
         if d != '/':
             try:
@@ -84,7 +95,7 @@ class Module(Command):
                     self._get_links()
                 else:
                     d = cwd
-                
+
             else:
                 d = cwd
 

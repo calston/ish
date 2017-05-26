@@ -22,7 +22,7 @@ class Shell(Cmd):
         self.prompt = self.ps % self.env
 
         base_path = os.path.abspath(os.path.dirname(__file__))
-        
+
         module_path = os.path.join(base_path, 'modules')
 
         modules = [fn[:-3] for fn in os.listdir(module_path)
@@ -52,7 +52,7 @@ class Shell(Cmd):
         lexer = shlex.shlex(cmd)
         lexer.whitespace_split = True
         args = [t for t in lexer]
-        
+
         if "fileno" not in dir(self.stdout):
             self.stdout = PIPE
 
@@ -124,7 +124,7 @@ class Shell(Cmd):
         "Quit interpipe shell"
         self.stdout.write("\n")
         return True
-        
+
     def do_EOF(self, line):
         "Quit interpipe shell"
         self.stdout.write("\n")
@@ -132,4 +132,3 @@ class Shell(Cmd):
 
 def init():
     Shell().cmdloop()
-    
