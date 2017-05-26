@@ -13,6 +13,7 @@ from ish.base import Command
 class Module(Command):
     def __init__(self, *a):
         self.soup = None
+        self.request = None
         self.lastmap = {}
 
         Command.__init__(self, *a)
@@ -69,9 +70,11 @@ class Module(Command):
 
         cwd = self.shell.env.get('cwd', '/')
 
+        self.shell.setEnv('secure', False)
+
         if arg == '..':
             try:
-                arg = cwd.rtrip('/').rsplit('/', 1)[0]
+                arg = cwd.rstrip('/').rsplit('/', 1)[0]
             except:
                 arg = '/'
 
@@ -101,19 +104,30 @@ class Module(Command):
 
         self.soup = None
         if d != '/':
-            try:
-                r = requests.get('https:/' + d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
-            except Exception, e:
-                r = None
-                self.shell.secure = False
-
-            if r is None:
-                # Try standard HTTP
+            if not '://' in d:
                 try:
-                    r = requests.get('http:/' + d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                    r = self.session.get('https:/' + d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                    self.shell.setEnv('secure', True)
                 except Exception, e:
-                    self.println("Error connecting to " + d + str(e))
                     r = None
+                    self.shell.setEnv('secure', False)
+
+                if r is None:
+                    # Try standard HTTP
+                    try:
+                        r = self.session.get('http:/' + d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                    except Exception, e:
+                        self.println("Error connecting to " + d + str(e))
+                        r = None
+            else:
+                try:
+                    r = self.session.get(d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                    self.shell.setEnv('secure', d.startswith('https'))
+                    p = urlparse.urlparse(d)
+                    d = "/%s%s" % (p.netname, p.path)
+                except Exception, e:
+                    r = None
+                    self.shell.setEnv('secure', False)
 
             if r is not None:
                 if r.history:
@@ -162,7 +176,7 @@ class Module(Command):
         results.sort()
 
         for i in results:
-            self.println(i)
+            self.println(i.encode('utf-8', 'replace'))
 
     def do_echo(self, args):
         """Echo arguments to stdout"""

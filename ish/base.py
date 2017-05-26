@@ -19,6 +19,7 @@ class ArgParse(argparse.ArgumentParser):
 class Command(object):
     def __init__(self, shell):
         self.shell = shell
+        self.session = shell.session
 
     def parseargs(self, arg, doc={}, description="", name=""):
         # Example doc:

@@ -12,7 +12,7 @@ class Module(Command):
     def do_google(self, arg):
         "Google the intertubes"
         
-        r = requests.get('https://www.google.co.za/search', params={'q': arg})
+        r = self.session.get('https://www.google.co.za/search', params={'q': arg})
 
         b = BeautifulSoup(r.text, 'html.parser')
 

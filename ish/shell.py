@@ -1,4 +1,5 @@
 import os
+import requests
 import sys
 import shlex
 import importlib
@@ -8,18 +9,23 @@ from cmd import Cmd
 
 from subprocess import Popen, PIPE
 
+from colored import fg, bg, attr
+
 
 class Shell(Cmd):
     prompt = "ISH#"
 
     def __init__(self):
         self.env = {
-            'cwd': '/'
+            'cwd': '/',
+            'ps': "%s[%sish%s]%s%%(cwd)s%s$ %s" % (fg(14), fg(6), fg(14), fg(165), fg(11), attr(0)),
+            'secure': False
         }
 
-        self.ps = "[ish]%(cwd)s$ "
 
-        self.prompt = self.ps % self.env
+        self.prompt = self.env['ps'] % self.env
+
+        self.session = requests.Session()
 
         base_path = os.path.abspath(os.path.dirname(__file__))
 
@@ -55,7 +61,7 @@ class Shell(Cmd):
     def setEnv(self, key, val):
         self.env[key] = val
 
-        self.prompt = self.ps % self.env
+        self.prompt = self.env['ps'] % self.env
 
     def execute(self, cmd):
         args = self._lex_split(cmd)
