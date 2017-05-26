@@ -75,7 +75,7 @@ class Module(Command):
                 try:
                     r = requests.get('http:/' + d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
                 except Exception, e:
-                    self.shell.stdout.write("Error connecting to " + d +str(e) +'\n')
+                    self.println("Error connecting to " + d + str(e))
                     r = None
 
             if r is not None:
@@ -87,7 +87,7 @@ class Module(Command):
                         d = '/%s%s' % (lp.netloc, lp.path)
 
                 if r.status_code == 404:
-                    self.shell.stdout.write(' %s: No such location [404]\n' % d)
+                    self.println(' %s: No such location [404]' % d)
 
                 if r.ok:
                     self.soup = BeautifulSoup(r.text, 'html.parser')
@@ -125,16 +125,16 @@ class Module(Command):
         results.sort()
 
         for i in results:
-            self.shell.stdout.write(i +'\n')
+            self.println(i)
 
     def do_echo(self, args):
         """Echo arguments to stdout"""
-        self.stdout.write(args + '\n')
+        self.println(args)
 
     def do_cat(self, args):
         """Redireccts stdin to stdout
         """
-        self.stdout.write(self.stdin.read())
+        self.shell.stdout.write(self.stdin.read())
 
     def do_e(self, args):
         """Run an application
@@ -142,7 +142,7 @@ class Module(Command):
         if args:
             return self.shell.execute(args)
         else:
-            self.stdout.write('Command required\n')
+            self.println('Command required')
 
     def do_grep(self, args):
         return self.shell.execute('grep ' + args)

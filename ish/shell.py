@@ -43,15 +43,22 @@ class Shell(Cmd):
         self.real_stdout = self.stdout
         self.real_stdin = self.stdin
 
+    def _lex_split(self, s, ws=None):
+        lexer = shlex.shlex(s)
+        if ws:
+            lexer.whitespace = ws
+        lexer.whitespace_split = True
+        tokens = [t.strip() for t in lexer]
+
+        return tokens
+
     def setEnv(self, key, val):
         self.env[key] = val
 
         self.prompt = self.ps % self.env
 
     def execute(self, cmd):
-        lexer = shlex.shlex(cmd)
-        lexer.whitespace_split = True
-        args = [t for t in lexer]
+        args = self._lex_split(cmd)
 
         if "fileno" not in dir(self.stdout):
             self.stdout = PIPE
@@ -80,15 +87,22 @@ class Shell(Cmd):
         return None
 
     def onecmd(self, line):
-        lexer = shlex.shlex(line)
-        lexer.whitespace = '|'
-        lexer.whitespace_split = True
+        # Process ; separated commands
+        commands = self._lex_split(line, ws=';')
+        if len(commands) > 1:
+            for cmd in commands:
+                self.onecmd(cmd)
 
-        tokens = [t.strip() for t in lexer]
+            return None
+
+        # Parse pipe directives
+        tokens = self._lex_split(line, ws='|')
 
         if len(tokens) <= 1:
+            # If it's a simple line then use the standard parser
             return Cmd.onecmd(self, line)
 
+        # Parse out a redirected set of pipes
         lastResult = None
         stdin = None
         for i, token in enumerate(tokens):
