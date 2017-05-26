@@ -2,6 +2,7 @@ import os
 import requests
 
 import urlparse
+import argparse
 
 from colored import fg, bg, attr
 
@@ -23,9 +24,45 @@ class Module(Command):
         else:
             self.println(str(self.soup))
 
+    def do_req(self, arg):
+        """Make HTTP requests"""
+
+        args = self.parseargs(
+            arg,
+            name='req',
+            description="A function for performing HTTP requests",
+            doc=[
+                [
+                    ('--method', '-m'),
+                    {
+                        'type': str,
+                        'default': 'GET',
+                        'help': "HTTP request method (GET, PUT, POST, HEAD, etc)",
+                    }
+                ],
+                [
+                    ('url',),
+                    {'metavar': 'url', 'type': str, 'help': 'Request URL'}
+                ]
+            ]
+        )
+
+        print args
+
+
     def do_json(self, arg):
         """Make json requests"""
-        self.println(self.stdin)
+        options = self.shell._lex_split(arg)
+
+        parser = argparse.ArgumentParser(
+                    description="A function for handling JSON requests")
+
+        parser.add_argument('url', metavar='u', type=str,
+                            help="A url to request")
+
+        import json
+
+        print options
 
     def do_cd(self, arg):
         "Traverse the intertubes"
@@ -134,7 +171,7 @@ class Module(Command):
     def do_cat(self, args):
         """Redireccts stdin to stdout
         """
-        self.shell.stdout.write(self.stdin.read())
+        self.shell.stdout.write(self.shell.stdin.read())
 
     def do_e(self, args):
         """Run an application

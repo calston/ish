@@ -145,4 +145,8 @@ class Shell(Cmd):
         return True
 
 def init():
-    Shell().cmdloop()
+    if len(sys.argv) > 1:
+        ln = ' '.join(sys.argv[1:])
+        Shell().onecmd(ln)
+    else:
+        Shell().cmdloop()
