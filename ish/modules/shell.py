@@ -48,9 +48,6 @@ class Module(Command):
             ]
         )
 
-        print args
-
-
     def do_json(self, arg):
         """Make json requests"""
         options = self.shell._lex_split(arg)
@@ -62,8 +59,6 @@ class Module(Command):
                             help="A url to request")
 
         import json
-
-        print options
 
     def do_cd(self, arg):
         "Traverse the intertubes"
@@ -120,7 +115,6 @@ class Module(Command):
                         self.println("Error connecting to " + d + str(e))
                         r = None
             else:
-                print d
                 try:
                     r = self.session.get(d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
                     self.shell.setEnv('secure', d.startswith('https'))
