@@ -97,7 +97,7 @@ class Module(Command):
             d = '/'
 
         else:
-            if arg.startswith('/'):
+            if arg.startswith('/') or '://' in arg:
                 d = arg
             else:
                 d = os.path.join(cwd, arg)
@@ -120,11 +120,12 @@ class Module(Command):
                         self.println("Error connecting to " + d + str(e))
                         r = None
             else:
+                print d
                 try:
                     r = self.session.get(d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
                     self.shell.setEnv('secure', d.startswith('https'))
                     p = urlparse.urlparse(d)
-                    d = "/%s%s" % (p.netname, p.path)
+                    d = "/%s%s" % (p.netloc, p.path)
                 except Exception, e:
                     r = None
                     self.shell.setEnv('secure', False)
@@ -162,9 +163,9 @@ class Module(Command):
         m = {}
         for link in links:
             url = link.get('href', '#')
-
-            dr[url] = link.text
-            m[link.text] = url
+            name = link.text.strip().strip('/').encode('ascii', 'ignore')
+            dr[url] = name
+            m[name] = url
 
         self.lastmap = m
         return dr

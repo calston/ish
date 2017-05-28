@@ -18,7 +18,8 @@ class Shell(Cmd):
     def __init__(self):
         self.env = {
             'cwd': '/',
-            'ps': "%s[%sish%s]%s%%(cwd)s%s$ %s" % (fg(14), fg(6), fg(14), fg(165), fg(11), attr(0)),
+            'ps': "%s[%sish%s]%s%%(cwd)s%s$ %s" % (
+                fg(14), fg(6), fg(14), fg(165), fg(11), attr(0)),
             'secure': False
         }
 
