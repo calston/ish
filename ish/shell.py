@@ -1,4 +1,7 @@
 import os
+import fcntl
+import termios
+import struct
 import requests
 import sys
 import shlex
@@ -11,20 +14,25 @@ from subprocess import Popen, PIPE
 
 from colored import fg, bg, attr
 
+try:
+    from pipes import quote
+except:
+    from shlex import quote
+
 
 class Shell(Cmd):
     prompt = "ISH#"
-
     def __init__(self):
         self.env = {
-            'cwd': '/',
-            'ps': "%s[%sish%s]%s%%(cwd)s%s$ %s" % (
+            'CWD': '/',
+            'PS': "%s[%sish%s]%s%%(CWD)s%s$ %s" % (
                 fg(14), fg(6), fg(14), fg(165), fg(11), attr(0)),
-            'secure': False
+            'SECURE': False,
+            'TERM': self.getTerminalSize()
         }
 
 
-        self.prompt = self.env['ps'] % self.env
+        self.prompt = self.env['PS'] % self.env
 
         self.session = requests.Session()
 
@@ -50,8 +58,33 @@ class Shell(Cmd):
         self.real_stdout = self.stdout
         self.real_stdin = self.stdin
 
+    def ioctl_GWINSZ(self, fd):
+        try:
+            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ,
+        '1234'))
+        except:
+            return
+        return cr
+
+    def getTerminalSize(self):
+        env = os.environ
+
+        cr = self.ioctl_GWINSZ(0) or self.ioctl_GWINSZ(1) \
+                or self.ioctl_GWINSZ(2)
+        if not cr:
+            try:
+                fd = os.open(os.ctermid(), os.O_RDONLY)
+                cr = self.ioctl_GWINSZ(fd)
+                os.close(fd)
+            except:
+                pass
+        if not cr:
+            cr = (env.get('LINES', 25), env.get('COLUMNS', 80))
+
+        return int(cr[1]), int(cr[0])
+
     def _lex_split(self, s, ws=None):
-        lexer = shlex.shlex(s)
+        lexer = shlex.shlex(s, posix=True)
         if ws:
             lexer.whitespace = ws
         lexer.whitespace_split = True
@@ -60,9 +93,12 @@ class Shell(Cmd):
         return tokens
 
     def setEnv(self, key, val):
-        self.env[key] = val
+        self.env[key.upper()] = val
 
-        self.prompt = self.env['ps'] % self.env
+        self.prompt = self.env['PS'] % self.env
+
+    def getEnv(self, key, default=None):
+        return self.env.get(key.upper(), default)
 
     def execute(self, cmd):
         args = self._lex_split(cmd)
@@ -93,7 +129,42 @@ class Shell(Cmd):
     def emptyline(self):
         return None
 
+    def _parse_variables(self, s):
+
+        escaped = False
+
+        rlist = []
+
+        for loc, ch in enumerate(s):
+            # Char by char...
+            if ch == "'":
+                escaped = not escaped
+
+            if (not escaped) and ch=='$':
+                if (loc > 0) and (s[loc-1] == '\\'):
+                    continue
+
+                else:
+                    segment = s[loc:]
+                    pos = 1
+                    while pos < len(segment) and segment[pos].isalpha():
+                        pos += 1
+                    var = segment[:pos]
+                    nvar = var[1:].upper()
+
+                    if var and (nvar in self.env):
+                        rlist.append((var, loc, len(var),
+                                        str(self.getEnv(nvar))))
+        ln = s
+        for var, loc, chars, env in rlist:
+            ln = ln[:loc] + quote(env) + ln[loc+chars:]
+
+        return ln
+
+
     def onecmd(self, line):
+        line = self._parse_variables(line)
+
         # Process ; separated commands
         commands = self._lex_split(line, ws=';')
         if len(commands) > 1:

@@ -11,7 +11,7 @@ from ish.base import Command
 class Module(Command):
     def do_google(self, arg):
         "Google the intertubes"
-        
+
         r = self.session.get('https://www.google.co.za/search', params={'q': arg})
 
         b = BeautifulSoup(r.text, 'html.parser')
@@ -45,7 +45,7 @@ class Module(Command):
 
                             self.shell.stdout.write(' ' + ln.strip() + '\n')
                         self.shell.stdout.write(' ' + t.strip() + '\n')
-                    else: 
+                    else:
                         self.shell.stdout.write(' ' + t.strip() + '\n')
             except Exception, e:
                 self.shell.stdout.write('Parse error')

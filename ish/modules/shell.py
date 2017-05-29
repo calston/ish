@@ -25,6 +25,10 @@ class Module(Command):
         else:
             self.println(str(self.soup))
 
+    def do_env(self, arg):
+        for k, v in self.shell.env.items():
+            self.println('%s=%s' % (k, repr(v)))
+
     def do_request(self, arg):
         """Make HTTP requests"""
         args = self.parseargs(
@@ -84,7 +88,7 @@ class Module(Command):
     def do_cd(self, arg):
         "Traverse the intertubes"
 
-        cwd = self.shell.env.get('cwd', '/')
+        cwd = self.shell.getEnv('cwd', '/')
 
         self.shell.setEnv('secure', False)
 
