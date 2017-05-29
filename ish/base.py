@@ -16,6 +16,13 @@ class ArgParse(argparse.ArgumentParser):
     def _print_message(self, message, file=None):
         self.stdout.write(message)
 
+    def exit(self, status=0, message=None):
+        if message:
+            self.stdout.write(message)
+
+    def error(self, message):
+        self.print_usage()
+
 class Command(object):
     def __init__(self, shell):
         self.shell = shell

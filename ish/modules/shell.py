@@ -25,20 +25,31 @@ class Module(Command):
         else:
             self.println(str(self.soup))
 
-    def do_req(self, arg):
+    def do_request(self, arg):
         """Make HTTP requests"""
-
         args = self.parseargs(
             arg,
             name='req',
             description="A function for performing HTTP requests",
             doc=[
                 [
-                    ('--method', '-m'),
+                    ('-m', '--method'),
                     {
                         'type': str,
                         'default': 'GET',
                         'help': "HTTP request method (GET, PUT, POST, HEAD, etc)",
+                    }
+                ],
+                [
+                    ('-v', '--verbose'),
+                    {'action': 'count', 'help': 'Verbose'}
+                ],
+                [
+                    ('-t', '--timeout'),
+                    {
+                        'type': int,
+                        'default': 5,
+                        'help': 'request timeout'
                     }
                 ],
                 [
@@ -47,6 +58,16 @@ class Module(Command):
                 ]
             ]
         )
+
+        try:
+            req = requests.request(args.method, args.url, timeout=args.timeout)
+            if args.verbose:
+                self.println("Status: %s" % req.status_code)
+                self.println("Headers: %s" % repr(req.headers))
+                self.println("Body: %s" % req.text)
+
+        except Exception, e:
+            self.println(e)
 
     def do_json(self, arg):
         """Make json requests"""
@@ -168,10 +189,14 @@ class Module(Command):
         self._get_links()
 
         results = [' %s/' % i for i, a in self.lastmap.items()]
+
         results.sort()
 
         for i in results:
             self.println(i.encode('utf-8', 'replace'))
+
+        if (not results) and self.soup:
+            self.println(self.soup)
 
     def do_echo(self, args):
         """Echo arguments to stdout"""
