@@ -9,6 +9,7 @@ from colored import fg, bg, attr
 from bs4 import BeautifulSoup
 
 from ish.base import Command
+from ish.parser import parseHTML
 
 class Module(Command):
     def __init__(self, *a):
@@ -169,6 +170,9 @@ class Module(Command):
                 if r.ok:
                     self.soup = BeautifulSoup(r.text, 'html.parser')
                     self.request = r
+                    ctype = self.request.headers.get('Content-Type',
+                                                     '').split(';')[0]
+                    self.shell.setEnv('type', ctype)
                     self._get_links()
                 else:
                     d = cwd
@@ -207,6 +211,11 @@ class Module(Command):
 
         if (not results) and self.soup:
             self.println(self.soup)
+
+    def do_view(self, args):
+        if self.soup:
+            text = parseHTML(self.soup)
+            print text
 
     def do_echo(self, args):
         """Echo arguments to stdout"""
