@@ -83,8 +83,8 @@ class Shell(Cmd):
 
         return int(cr[1]), int(cr[0])
 
-    def _lex_split(self, s, ws=None):
-        lexer = shlex.shlex(s, posix=True)
+    def _lex_split(self, s, ws=None, posix=True):
+        lexer = shlex.shlex(s, posix=posix)
         if ws:
             lexer.whitespace = ws
         lexer.whitespace_split = True

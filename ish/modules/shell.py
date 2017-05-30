@@ -154,8 +154,14 @@ class Module(Command):
                     last = r.history[0]
                     if last.is_redirect:
                         loc = last.headers.get('Location', d+'??')
-                        lp = urlparse.urlparse(loc)
-                        d = '/%s%s' % (lp.netloc, lp.path)
+                        if loc.startswith('/'):
+                            if cwd != '/':
+                                d = urlparse.urlparse(cwd).netloc + loc
+                            else:
+                                d =  d + loc
+                        else:
+                            lp = urlparse.urlparse(loc)
+                            d = '/%s%s' % (lp.netloc, lp.path)
 
                 if r.status_code == 404:
                     self.println(' %s: No such location [404]' % d)
