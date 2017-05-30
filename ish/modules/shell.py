@@ -9,7 +9,7 @@ from colored import fg, bg, attr
 from bs4 import BeautifulSoup
 
 from ish.base import Command
-from ish.parser import parseHTML
+from ish.parser import HTMLParser
 
 class Module(Command):
     def __init__(self, *a):
@@ -214,8 +214,8 @@ class Module(Command):
 
     def do_view(self, args):
         if self.soup:
-            text = parseHTML(self.soup)
-            print text
+            text = HTMLParser(self.soup, self.shell).parse()
+            #print text
 
     def do_echo(self, args):
         """Echo arguments to stdout"""

@@ -1,4 +1,5 @@
 import requests
+import textwrap
 
 import urlparse
 
@@ -31,22 +32,10 @@ class Module(Command):
 
                 content = result.find_all('span', class_='st')
 
-                blocklen = 78
                 if content:
-                    t = content[0].text.replace('\n', '')
-                    if len(t) > blocklen:
-                        while len(t) > blocklen:
-                            ln = t[:blocklen]
-                            t = t[blocklen:]
-
-                            if len(t) > 0 and not t.startswith(' ') and not ln.endswith(' '):
-                                ln, e = ln.rsplit(None, 1)
-                                t = e + t
-
-                            self.shell.stdout.write(' ' + ln.strip() + '\n')
-                        self.shell.stdout.write(' ' + t.strip() + '\n')
-                    else:
-                        self.shell.stdout.write(' ' + t.strip() + '\n')
+                    t = textwrap.wrap(content[0].text.replace('\n', ''), 78)
+                    for l in t:
+                        self.shell.stdout.write('  ' + l.strip() + '\n')
             except Exception, e:
                 self.shell.stdout.write('Parse error')
 
