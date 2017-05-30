@@ -15,7 +15,8 @@ setup(
     install_requires=[
         'requests',
         'BeautifulSoup4',
-        'colored'
+        'colored',
+        'img2txt.py'
     ],
     classifiers=[
         'License :: OSI Approved :: MIT License',

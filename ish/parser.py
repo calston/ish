@@ -1,14 +1,19 @@
 import textwrap
 
+import requests
+
 from bs4 import element
 
 from colored import fg, bg, attr
 
+from ish.base import renderImage
+
 
 class HTMLParser(object):
-    def __init__(self, soup, shell):
+    def __init__(self, soup, shell, request):
         self.soup = soup
         self.shell = shell
+        self.request = request
 
         self.x = 0
 
@@ -36,6 +41,9 @@ class HTMLParser(object):
     def render_b(self, tag, content):
         return attr(1) + self._flatten_content(content) + attr(0)
 
+    def render_strong(self, *a):
+        return self.render_b(*a)
+
     def render_u(self, tag, content):
         return attr(4) + self._flatten_content(content) + attr(0)
 
@@ -45,23 +53,39 @@ class HTMLParser(object):
         return u"%s [%s]" % (text, link)
 
     def render_h1(self, tag, content):
-        return content.upper(self._flatten_content(content))
+        return self._flatten_content(content).upper()
 
     def render_h2(self, tag, content):
-        return content.upper(self._flatten_content(content))
+        return self._flatten_content(content).upper()
 
     def render_h3(self, tag, content):
-        return content.upper(self._flatten_content(content))
+        return self._flatten_content(content).upper()
 
     def render_h4(self, tag, content):
-        return content.upper(self._flatten_content(content))
+        return self._flatten_content(content).upper()
 
     def render_h5(self, tag, content):
-        return content.upper(self._flatten_content(content))
+        return self._flatten_content(content).upper()
 
     def render_hr(self, tag, content):
         ln = "_" * 80
         return '\n' + ln + '\n'
+
+    def render_img(self, tag, content):
+        src = tag.get('src')
+        base = self.shell.getEnv('uri')
+
+        if src.startswith('/'):
+            src = base.rstrip('/') + src
+        elif src.startswith('http') and '://' in src:
+            src = src
+
+        try:
+            r = requests.get(src)
+            img = renderImage(r.content)
+            return img
+        except:
+            return ""
 
     def render_br(self, tag, content):
         return "\n"
@@ -162,8 +186,4 @@ class HTMLParser(object):
     def parse(self):
         if self.soup.body:
             st = self.iterTags(self.soup.body)[1]
-            print st
             return st
-        #blocks = self._align_term(st.encode('ascii', 'ignore'), 80)
-
-        #return '\n'.join(blocks)

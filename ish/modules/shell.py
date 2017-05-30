@@ -1,15 +1,17 @@
 import os
-import requests
-
 import urlparse
 import argparse
+
+import requests
 
 from colored import fg, bg, attr
 
 from bs4 import BeautifulSoup
 
-from ish.base import Command
+from ish.base import Command, renderImage
 from ish.parser import HTMLParser
+
+
 
 class Module(Command):
     def __init__(self, *a):
@@ -127,7 +129,9 @@ class Module(Command):
         if d != '/':
             if not '://' in d:
                 try:
-                    r = self.session.get('https:/' + d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                    uri = 'https:/' + d
+                    r = self.session.get(uri, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                    self.shell.setEnv('uri', uri)
                     self.shell.setEnv('secure', True)
                 except Exception, e:
                     r = None
@@ -136,18 +140,22 @@ class Module(Command):
                 if r is None:
                     # Try standard HTTP
                     try:
-                        r = self.session.get('http:/' + d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                        uri = 'http:/' + d
+                        r = self.session.get(uri, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                        self.shell.setEnv('uri', uri)
                     except Exception, e:
                         self.println("Error connecting to " + d + str(e))
                         r = None
             else:
                 try:
                     r = self.session.get(d, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                    self.shell.setEnv('uri', d)
                     self.shell.setEnv('secure', d.startswith('https'))
                     p = urlparse.urlparse(d)
                     d = "/%s%s" % (p.netloc, p.path)
                 except Exception, e:
                     r = None
+                    self.shell.setEnv('uri', '/')
                     self.shell.setEnv('secure', False)
 
             if r is not None:
@@ -168,10 +176,14 @@ class Module(Command):
                     self.println(' %s: No such location [404]' % d)
 
                 if r.ok:
-                    self.soup = BeautifulSoup(r.text, 'html.parser')
                     self.request = r
                     ctype = self.request.headers.get('Content-Type',
                                                      '').split(';')[0]
+
+                    if ctype == 'text/html':
+                        self.soup = BeautifulSoup(r.text, 'html.parser')
+                    else:
+                        self.soup = None
                     self.shell.setEnv('type', ctype)
                     self._get_links()
                 else:
@@ -181,6 +193,31 @@ class Module(Command):
                 d = cwd
 
         self.shell.setEnv('cwd', d)
+
+    def do_form(self, args):
+        """Do stuff with forms"""
+        args = self.parseargs(
+            args,
+            name='req',
+            description="A function for using forms on the current page",
+            doc=[
+                [
+                    ('-l', '--list'),
+                    {
+                        'action': 'store_const',
+                        'const': True,
+                        'default': False,
+                        'help': "List forms",
+                    }
+                ],
+            ]
+        )
+
+        if args.list:
+            if not self.soup:
+                self.println("No forms")
+            else:
+                forms = self.soup.find_all('form')
 
     def _get_links(self):
         self.lastmap = {}
@@ -212,10 +249,23 @@ class Module(Command):
         if (not results) and self.soup:
             self.println(self.soup)
 
+    def do_stat(self, args):
+        for c in self.shell.session.cookies:
+            self.println(repr(c))
+
     def do_view(self, args):
-        if self.soup:
-            text = HTMLParser(self.soup, self.shell).parse()
-            #print text
+        mime = self.shell.getEnv('type')
+
+        if mime == 'text/html':
+            if self.soup:
+                text = HTMLParser(self.soup, self.shell, self.request).parse()
+                self.shell.stdout.write(text + '\n')
+            else:
+                self.println("No soup for you!")
+        elif mime.startswith('image'):
+            self.println(renderImage(self.request.content))
+        else:
+            self.println(mime)
 
     def do_echo(self, args):
         """Echo arguments to stdout"""

@@ -1,8 +1,11 @@
 import shlex
 import argparse
+from StringIO import StringIO
 
 import requests
 from bs4 import BeautifulSoup
+
+import colored
 
 
 class Web(object):
@@ -29,7 +32,6 @@ class Command(object):
         self.session = shell.session
 
     def parseargs(self, arg, doc={}, description="", name=""):
-        # Example doc:
         parser = ArgParse(description=description, prog=name)
         parser.stdout = self.shell.stdout
         for k, v in doc:
@@ -40,3 +42,23 @@ class Command(object):
 
     def println(self, s):
         self.shell.stdout.write(str(s)+'\n')
+
+def renderImage(content):
+    import img2txt
+    import ansi
+
+    img = img2txt.load_and_resize_image(
+        StringIO(content),
+        True,
+        40,
+        1.0
+    )
+    pixel = img.load()
+    width, height = img.size
+
+    fill_string = "\x1b[49m\x1b[K"
+
+    text = ansi.generate_ANSI_from_pixels(pixel, width, height, None)[0]
+
+    return fill_string + text + colored.attr(0)
+    

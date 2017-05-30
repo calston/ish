@@ -31,7 +31,6 @@ class Shell(Cmd):
             'TERM': self.getTerminalSize()
         }
 
-
         self.prompt = self.env['PS'] % self.env
 
         self.session = requests.Session()
