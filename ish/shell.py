@@ -113,7 +113,7 @@ class Shell(Cmd):
         try:
             p = Popen(args, stdin=stdin, stdout=self.stdout)
             if self.stdin and p.stdin:
-                p.stdin.write(self.stdin.read().encode('utf-8', 'replace'))
+                p.stdin.write(self.stdin.read())
                 p.stdin.close()
             p.wait()
 

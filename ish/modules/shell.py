@@ -217,7 +217,10 @@ class Module(Command):
             if not self.soup:
                 self.println("No forms")
             else:
+                myforms = {}
                 forms = self.soup.find_all('form')
+                for form in forms:
+                    
 
     def _get_links(self):
         self.lastmap = {}
