@@ -131,6 +131,7 @@ class Module(Command):
                 try:
                     uri = 'https:/' + d
                     r = self.session.get(uri, timeout=5, headers={'user-agent': 'Interpipe Shell/0.0.1'})
+                    print r
                     self.shell.setEnv('uri', uri)
                     self.shell.setEnv('secure', True)
                 except Exception, e:
@@ -220,7 +221,7 @@ class Module(Command):
                 myforms = {}
                 forms = self.soup.find_all('form')
                 for form in forms:
-                    
+                    print(form)
 
     def _get_links(self):
         self.lastmap = {}
@@ -266,7 +267,8 @@ class Module(Command):
             else:
                 self.println("No soup for you!")
         elif mime.startswith('image'):
-            self.println(renderImage(self.request.content))
+            self.println(renderImage(self.request.content,
+                                     int(self.shell.getEnv('term')[0]/2)))
         else:
             self.println(mime)
 

@@ -7,6 +7,7 @@ import sys
 import shlex
 import importlib
 import StringIO
+import copy
 
 from cmd import Cmd
 
@@ -31,7 +32,7 @@ class Shell(Cmd):
             'TERM': self.getTerminalSize()
         }
 
-        self.prompt = self.env['PS'] % self.env
+        self.formatPrompt()
 
         self.session = requests.Session()
 
@@ -91,10 +92,25 @@ class Shell(Cmd):
 
         return tokens
 
+    def formatPrompt(self):
+        env = copy.copy(self.env)
+
+        # Some URL's are absurd, so we make some effort to trim them
+        cwd = env['CWD']
+
+        if len(self.env['CWD']) > 40:
+            segs = env['CWD'].strip('/').split('/')
+            start = segs[0]
+            end = segs[-1]
+            cwd = '/%s/.../%s' % (start, end)
+
+        env['CWD'] = cwd
+
+        self.prompt = self.env['PS'] % env
+
     def setEnv(self, key, val):
         self.env[key.upper()] = val
-
-        self.prompt = self.env['PS'] % self.env
+        self.formatPrompt()
 
     def getEnv(self, key, default=None):
         return self.env.get(key.upper(), default)
@@ -203,8 +219,12 @@ class Shell(Cmd):
                 func = getattr(self, 'do_' + cmd)
             except AttributeError:
                 lastResult = self.default(line)
-
-            lastResult = func(arg)
+            try:
+                lastResult = func(arg)
+            except Exception, e:
+                self.real_stdout.write(
+                    'Error executing %s: %s\n' % (repr(token), e))
+                lastResult = None
             stdin = self.stdout
 
         self.stdout = self.real_stdout

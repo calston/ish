@@ -43,15 +43,15 @@ class Command(object):
     def println(self, s):
         self.shell.stdout.write(str(s)+'\n')
 
-def renderImage(content):
+def renderImage(content, max_width=40):
     import img2txt
     import ansi
 
     img = img2txt.load_and_resize_image(
         StringIO(content),
         True,
-        40,
-        1.0
+        max_width,
+        0.5
     )
     pixel = img.load()
     width, height = img.size
@@ -61,4 +61,4 @@ def renderImage(content):
     text = ansi.generate_ANSI_from_pixels(pixel, width, height, None)[0]
 
     return fill_string + text + colored.attr(0)
-    
+
